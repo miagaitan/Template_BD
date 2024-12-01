@@ -6,6 +6,7 @@ using Postgrest.Models;
 using TMPro;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
 public class SupabaseManager : MonoBehaviour
 
@@ -16,14 +17,17 @@ public class SupabaseManager : MonoBehaviour
     [SerializeField] TMP_InputField _userPassInput;
     [SerializeField] TextMeshProUGUI _stateText;
 
-    string supabaseUrl = "url"; //COMPLETAR
-    string supabaseKey = "key"; //COMPLETAR
+    public static int CurrentUserId { get; private set; } 
+    public static string CurrentUsername { get; private set; }
+
+    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co"; //COMPLETAR
+    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI"; //COMPLETAR
 
     Supabase.Client clientSupabase;
 
     private usuarios _usuarios = new usuarios();
 
-
+    public bool canPlay = false;
     public async void UserLogin()
     {
         // Initialize the Supabase client
@@ -38,7 +42,7 @@ public class SupabaseManager : MonoBehaviour
 
 
 
-        // filtro según datos de login
+        // filtro segï¿½n datos de login
         var login_password = await clientSupabase
           .From<usuarios>()
           .Select("password")
@@ -46,70 +50,89 @@ public class SupabaseManager : MonoBehaviour
           .Get();
 
 
-        if (login_password.Model.password.Equals(_userPassInput.text))
+        if (login_password.Models.Count > 0)
         {
-            print("LOGIN SUCCESSFUL");
-            _stateText.text = "LOGIN SUCCESSFUL";
-            _stateText.color = Color.green;
+            var usuario = login_password.Models[0];
+            if (usuario.password.Equals(_userPassInput.text))
+            {
+                print("LOGIN SUCCESSFUL");
+                _stateText.text = "LOGIN SUCCESSFUL";
+                _stateText.color = Color.green;
+                SupabaseManager.CurrentUsername = _userIDInput.text; 
+                SupabaseManager.CurrentUserId = usuario.id;
+                canPlay = true;
+            }
+            else
+            {
+                print("WRONG PASSWORD");
+                _stateText.text = "WRONG PASSWORD";
+                _stateText.color = Color.red;
+            }
         }
         else
         {
-            print("WRONG PASSWORD");
-            _stateText.text = "WRONG PASSWORD";
-            _stateText.color = Color.red;
+            print("USER NOT FOUND");
+            _stateText.text = "USER NOT FOUND";
+            _stateText.color = Color.red; 
         }
     }
 
     public async void InsertarNuevoUsuario()
+{
+    // Initialize the Supabase client
+    clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
+
+    // Consultar el Ãºltimo id utilizado (ID = index)
+    var ultimoId = await clientSupabase
+        .From<usuarios>()
+        .Select("id")
+        .Order(usuarios => usuarios.id, Postgrest.Constants.Ordering.Descending) // Ordenar en orden descendente para obtener el Ãºltimo id
+        .Get();
+
+    int nuevoId = 1; // Valor predeterminado si la tabla estÃ¡ vacÃ­a
+
+    // Check if the query returned any results
+    if (ultimoId != null && ultimoId.Models.Count > 0)
     {
+        nuevoId = ultimoId.Models[0].id + 1;  // Only access the first item if the list is not empty
+    }
+    else
+    {
+        Debug.LogWarning("No users found, starting with ID 1");
+    }
 
-        // Initialize the Supabase client
-        clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
+    // Crear el nuevo usuario con el nuevo id
+    var nuevoUsuario = new usuarios
+    {
+        id = nuevoId,
+        username = _userIDInput.text,
+        age = Random.Range(0, 100), // luego creo el campo que falta en la UI
+        password = _userPassInput.text,
+    };
 
-        // Consultar el último id utilizado (ID = index)
-        var ultimoId = await clientSupabase
-            .From<usuarios>()
-            .Select("id")
-            .Order(usuarios => usuarios.id, Postgrest.Constants.Ordering.Descending) // Ordenar en orden descendente para obtener el último id
-            .Get();
+    // Insertar el nuevo usuario
+    var resultado = await clientSupabase
+        .From<usuarios>()
+        .Insert(new[] { nuevoUsuario });
 
-        int nuevoId = 1; // Valor predeterminado si la tabla está vacía
-
-        if (ultimoId != null)
-        {
-            nuevoId = ultimoId.Model.id + 1; // Incrementar el último id
-        }
-
-        // Crear el nuevo usuario con el nuevo id
-        var nuevoUsuario = new usuarios
-        {
-
-            id = nuevoId,
-            username = _userIDInput.text,
-            age = Random.Range(0, 100), //luego creo el campo que falta en la UI
-            password = _userPassInput.text,
-        };
-
-
-        // Insertar el nuevo usuario
-        var resultado = await clientSupabase
-            .From<usuarios>()
-            .Insert(new[] { nuevoUsuario });
-
-
-        //verifico el estado de la inserción 
-        if (resultado.ResponseMessage.IsSuccessStatusCode)
-        {
-            _stateText.text = "Usuario Correctamente Ingresado";
-            _stateText.color = Color.green;
-        }
-        else
-        {
-            _stateText.text = "Error en el registro de usuario";
-            _stateText.text = resultado.ResponseMessage.ToString();
-            _stateText.color = Color.green;
-        }
-
+    // Verifico el estado de la inserciÃ³n
+    if (resultado.ResponseMessage.IsSuccessStatusCode)
+    {
+        _stateText.text = "Usuario Correctamente Ingresado";
+        _stateText.color = Color.green;
+        canPlay = true;
+    }
+    else
+    {
+        _stateText.text = "Error en el registro de usuario";
+        _stateText.color = Color.red;
     }
 }
-
+    public void Play()
+        {
+       if (canPlay == true )
+         {
+             SceneManager.LoadScene("TriviaSelectScene");
+         }
+ }
+}

@@ -7,8 +7,8 @@ using Postgrest.Models;
 
 public class DatabaseManager : MonoBehaviour
 {
-    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co"; //COMPLETAR
-    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI"; //COMPLETAR
+    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co"; 
+    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI"; 
 
     Supabase.Client clientSupabase;
 
@@ -21,11 +21,7 @@ public class DatabaseManager : MonoBehaviour
     async void Start()
     {
         clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
-        
         index = PlayerPrefs.GetInt("SelectedIndex");
-
-        //print(_selectedTrivia);
-
         await LoadTriviaData(index);
     }
 

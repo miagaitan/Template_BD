@@ -9,10 +9,9 @@ public class usuarios : BaseModel
     [Column("username")]
     public string username { get; set; }
 
-    [Column("password")]
-    public string password { get; set; }
-
     [Column("age")]
     public int age { get; set; }
 
+    [Column("password")]
+    public string password { get; set; }
 }

@@ -16,3 +16,4 @@ public class intentos : BaseModel
     [Column("categoria_id")]
     public int categoria_id { get; set; }
 }
+

@@ -1,54 +1,53 @@
 using UnityEngine;
-using Supabase;
+using Supabase; 
 using Supabase.Interfaces;
-using System.Threading;
-using Postgrest.Models;
+using System.Threading; 
+using Postgrest.Models; 
 using TMPro;
-using UnityEngine.UI;
-using System.Threading.Tasks;
+using UnityEngine.UI; 
+using System.Threading.Tasks; 
 using UnityEngine.SceneManagement;
 
+
+
 public class SupabaseManager : MonoBehaviour
-
 {
-
     [Header("Campos de Interfaz")]
-    [SerializeField] TMP_InputField _userIDInput;
-    [SerializeField] TMP_InputField _userPassInput;
-    [SerializeField] TextMeshProUGUI _stateText;
+    [SerializeField] TMP_InputField _userIDInput; 
+    [SerializeField] TMP_InputField _userPassInput; 
+    [SerializeField] TextMeshProUGUI _stateText; 
 
     public static int CurrentUserId { get; private set; } 
-    public static string CurrentUsername { get; private set; }
-
-    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co"; //COMPLETAR
-    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI"; //COMPLETAR
+    public static string CurrentUsername { get; private set; } 
+    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co";
+    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI"; 
 
     Supabase.Client clientSupabase;
-
     private usuarios _usuarios = new usuarios();
 
     public bool canPlay = false;
+
+    public void Start()
+    {
+
+    }
+
     public async void UserLogin()
     {
-        // Initialize the Supabase client
+   
         clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
 
-        // prueba
         var test_response = await clientSupabase
             .From<usuarios>()
             .Select("*")
             .Get();
         Debug.Log(test_response.Content);
 
-
-
-        // filtro seg�n datos de login
         var login_password = await clientSupabase
-          .From<usuarios>()
-          .Select("password")
-          .Where(usuarios => usuarios.username == _userIDInput.text)
-          .Get();
-
+            .From<usuarios>()
+            .Select("id, password")
+            .Where(usuarios => usuarios.username == _userIDInput.text)
+            .Get(); 
 
         if (login_password.Models.Count > 0)
         {
@@ -78,61 +77,58 @@ public class SupabaseManager : MonoBehaviour
     }
 
     public async void InsertarNuevoUsuario()
-{
-    // Initialize the Supabase client
-    clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
-
-    // Consultar el último id utilizado (ID = index)
-    var ultimoId = await clientSupabase
-        .From<usuarios>()
-        .Select("id")
-        .Order(usuarios => usuarios.id, Postgrest.Constants.Ordering.Descending) // Ordenar en orden descendente para obtener el último id
-        .Get();
-
-    int nuevoId = 1; // Valor predeterminado si la tabla está vacía
-
-    // Check if the query returned any results
-    if (ultimoId != null && ultimoId.Models.Count > 0)
     {
-        nuevoId = ultimoId.Models[0].id + 1;  // Only access the first item if the list is not empty
-    }
-    else
-    {
-        Debug.LogWarning("No users found, starting with ID 1");
-    }
+      
+        clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
 
-    // Crear el nuevo usuario con el nuevo id
-    var nuevoUsuario = new usuarios
-    {
-        id = nuevoId,
-        username = _userIDInput.text,
-        age = Random.Range(0, 100), // luego creo el campo que falta en la UI
-        password = _userPassInput.text,
-    };
+  
+        var ultimoId = await clientSupabase
+            .From<usuarios>()
+            .Select("id")
+            .Order(usuarios => usuarios.id, Postgrest.Constants.Ordering.Descending)
+            .Get();
 
-    // Insertar el nuevo usuario
-    var resultado = await clientSupabase
-        .From<usuarios>()
-        .Insert(new[] { nuevoUsuario });
+        int nuevoId = 1;
 
-    // Verifico el estado de la inserción
-    if (resultado.ResponseMessage.IsSuccessStatusCode)
-    {
-        _stateText.text = "Usuario Correctamente Ingresado";
-        _stateText.color = Color.green;
-        canPlay = true;
-    }
-    else
-    {
-        _stateText.text = "Error en el registro de usuario";
-        _stateText.color = Color.red;
-    }
-}
-    public void Play()
+        if (ultimoId != null)
         {
-       if (canPlay == true )
-         {
-             SceneManager.LoadScene("TriviaSelectScene");
-         }
- }
+            nuevoId = ultimoId.Models[0].id + 1; 
+        }
+
+        
+        var nuevoUsuario = new usuarios
+        {
+            id = nuevoId,
+            username = _userIDInput.text,
+            age = Random.Range(0, 100),
+            password = _userPassInput.text,
+        };
+
+     
+        var resultado = await clientSupabase
+            .From<usuarios>()
+            .Insert(new[] { nuevoUsuario });
+
+      
+        if (resultado.ResponseMessage.IsSuccessStatusCode)
+        {
+            _stateText.text = "Usuario Correctamente Ingresado";
+            _stateText.color = Color.green;
+            canPlay = true;
+        }
+        else
+        {
+            _stateText.text = "Error en el registro de usuario";
+            _stateText.text = resultado.ResponseMessage.ToString();
+            _stateText.color = Color.red;
+        }
+    }
+
+    public void Play()
+    {
+        if (canPlay == true)
+        {
+            SceneManager.LoadScene("TriviaSelectScene");
+        }
+    }
 }

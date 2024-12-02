@@ -9,12 +9,10 @@ using System.Linq;
 using UnityEngine.SceneManagement;
 
 public class Ranking : MonoBehaviour
-
 {
-    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co"; //COMPLETAR
-    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI"; //COMPLETAR
-
-    Supabase.Client clientSupabase;
+    string supabaseUrl = "https://vdmvxiswfvbmrcadujzt.supabase.co";
+    string supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbXZ4aXN3ZnZibXJjYWR1anp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxNDYzNjksImV4cCI6MjA0NzcyMjM2OX0.EJJpHJsRidOCyICa7fN7tGdHx7o6BkxLYc6VxgGztfI";
+    public Supabase.Client clientSupabase;
 
     List<trivia> trivias = new List<trivia>();
     List<intentos> attempts = new List<intentos>();
@@ -28,9 +26,8 @@ public class Ranking : MonoBehaviour
     public static Ranking Instance { get; private set; }
 
     public DatabaseManager databaseManager;
-    
-    // Start is called before the first frame update
-   async void Start()
+
+    async void Start()
     {
         Instance = this;
         clientSupabase = new Supabase.Client(supabaseUrl, supabaseKey);
@@ -46,7 +43,7 @@ public class Ranking : MonoBehaviour
         ShowGeneral();
     }
 
-   async Task SelectTrivias()
+    async Task SelectTrivias()
     {
         var response = await clientSupabase
             .From<trivia>()
